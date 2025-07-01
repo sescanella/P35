@@ -128,93 +128,167 @@ function Dashboard() {
       ) : (
         <>
           {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold text-black mb-4 animate-scale-in">
-              Habitos Seba
+          <div className="text-center mb-6">
+            <h1 className="text-5xl font-extrabold text-black mb-1 animate-scale-in">
+              HABITOS SEBA
             </h1>
-            <p className="text-lg text-black max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              Construye hábitos positivos y alcanza tus metas diarias con nuestro sistema de seguimiento inteligente
-            </p>
-            <div className="mt-6 flex justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="bg-white border border-black rounded-2xl px-6 py-3 shadow-sm">
-                <span className="text-sm text-gray-600">Total de hábitos</span>
-                <div className="text-2xl font-bold text-black">{habits.length}</div>
+          </div>
+
+          {/* Main Content Grid - 40%/60% split */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+            {/* Left Column: Metrics + HabitForm + HabitList (40% width) */}
+            <div className="lg:col-span-2 space-y-4">
+              
+              {/* Metrics Block */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="text-center bg-white border border-black rounded-2xl p-4">
+                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Total de hábitos</span>
+                  <div className="text-2xl font-bold text-black mt-1">{habits.length}</div>
+                </div>
+                <div className="text-center bg-white border border-black rounded-2xl p-4">
+                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Completados hoy</span>
+                  <div className="text-2xl font-bold text-black mt-1">{habits.filter(h => h.done).length}</div>
+                </div>
               </div>
-              <div className="bg-white border border-black rounded-2xl px-6 py-3 shadow-sm">
-                <span className="text-sm text-gray-600">Completados hoy</span>
-                <div className="text-2xl font-bold text-black">{habits.filter(h => h.done).length}</div>
-              </div>
+
+              {/* HabitForm - Collapsible */}
+              <CollapsibleHabitForm 
+                habit={editingHabit} 
+                onSave={handleSaveHabit}
+                showEditOptions={showEditOptions}
+                onDeactivate={() => handleDeactivate(editingHabit.id)}
+                onCancel={() => { setEditingHabit(null); setShowEditOptions(false); }}
+              />
+
+              {/* HabitList - Collapsible */}
+              <CollapsibleHabitList
+                habits={habits}
+                onToggleDone={handleToggleDone}
+                onEdit={handleEdit}
+                onDelete={handleDeactivate}
+              />
+            </div>
+
+            {/* Right Column: DailyTracker (60% width) */}
+            <div className="lg:col-span-3">
+              <DailyTracker habits={habits} />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-            {/* Formulario - Tarjeta destacada */}
-            <div className="xl:col-span-1 animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
-              <div className="bg-white border border-black rounded-3xl p-8 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                    <span className="text-2xl text-white">✨</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">{editingHabit ? 'Editar Hábito' : 'Crear Nuevo Hábito'}</h2>
-                </div>
-                <HabitForm habit={editingHabit} onSave={handleSaveHabit} />
-                {showEditOptions && (
-                  <div className="flex gap-2 mt-4">
-                    <button
-                      className="flex-1 bg-black text-white py-2 rounded-xl hover:bg-gray-800 transition"
-                      onClick={() => handleDeactivate(editingHabit.id)}
-                    >
-                      Eliminar
-                    </button>
-                    <button
-                      className="flex-1 bg-white text-black border border-black py-2 rounded-xl hover:bg-gray-100 transition"
-                      onClick={() => { setEditingHabit(null); setShowEditOptions(false); }}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                )}
+          {/* Row 3: Chart - Full Width */}
+          <div className="bg-white border border-black rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-lg text-white">📊</span>
               </div>
+              <h2 className="text-xl font-bold text-black">Progreso Diario</h2>
             </div>
-
-            {/* Lista de hábitos */}
-            <div className="xl:col-span-2 animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-              <div className="bg-white border border-black rounded-3xl p-8 shadow-lg h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                    <span className="text-2xl text-white">📝</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Mis Hábitos</h2>
-                </div>
-                <HabitList
-                  habits={habits}
-                  onToggleDone={handleToggleDone}
-                  onEdit={handleEdit}
-                  onDelete={handleDeactivate}
-                />
-              </div>
-            </div>
-
-            {/* Gráfico */}
-            <div className="xl:col-span-1 animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
-              <div className="bg-white border border-black rounded-3xl p-8 shadow-lg">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
-                    <span className="text-2xl text-white">📊</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-black">Progreso Diario</h2>
-                </div>
-                <HabitChart data={chartData} />
-              </div>
-            </div>
-          </div>
-
-          {/* Daily Tracker */}
-          <div className="mt-8 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-            <DailyTracker habits={habits} />
+            <HabitChart data={chartData} />
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+// Componente HabitForm Colapsable
+function CollapsibleHabitForm({ habit, onSave, showEditOptions, onDeactivate, onCancel }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="bg-white border border-black rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Header clickeable */}
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+            <span className="text-sm text-white">✨</span>
+          </div>
+          <h3 className="text-lg font-bold text-black">
+            {habit ? 'Editar Hábito' : 'Crear Nuevo Hábito'}
+          </h3>
+        </div>
+        <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>
+          <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Contenido expandible */}
+      <div className={`transition-all duration-300 ease-in-out ${
+        isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+      } overflow-hidden`}>
+        <div className="px-4 pb-4 border-t border-gray-100">
+          <div className="pt-4">
+            <HabitForm habit={habit} onSave={onSave} />
+            {showEditOptions && (
+              <div className="flex gap-2 mt-4">
+                <button
+                  className="flex-1 bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 hover:scale-105 transition-all duration-200 font-medium"
+                  onClick={onDeactivate}
+                >
+                  Eliminar
+                </button>
+                <button
+                  className="flex-1 bg-white text-black border border-black py-2 px-4 rounded-lg hover:bg-black hover:text-white hover:scale-105 transition-all duration-200 font-medium"
+                  onClick={onCancel}
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Componente HabitList Colapsable
+function CollapsibleHabitList({ habits, onToggleDone, onEdit, onDelete }) {
+  const [isExpanded, setIsExpanded] = useState(true) // Expandido por defecto
+
+  return (
+    <div className="bg-white border border-black rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+      {/* Header clickeable */}
+      <div 
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+            <span className="text-sm text-white">📝</span>
+          </div>
+          <h3 className="text-lg font-bold text-black">Mis Hábitos</h3>
+          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+            {habits.length}
+          </span>
+        </div>
+        <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>
+          <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Contenido expandible */}
+      <div className={`transition-all duration-300 ease-in-out ${
+        isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+      } overflow-hidden`}>
+        <div className="px-4 pb-4 border-t border-gray-100">
+          <div className="pt-4">
+            <HabitList
+              habits={habits}
+              onToggleDone={onToggleDone}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

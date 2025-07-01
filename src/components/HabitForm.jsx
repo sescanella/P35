@@ -99,22 +99,22 @@ const HabitForm = ({ habit, onSave }) => {
           <label className="text-black font-medium text-sm">
             Color del hábito *
           </label>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {availableColors.map((color) => (
               <button
                 key={color.hex}
                 type="button"
                 onClick={() => setSelectedColor(color.hex)}
-                className={`w-full h-12 rounded-xl transition-all duration-200 transform hover:scale-105 border-2 ${
+                className={`w-full h-10 rounded-lg transition-all duration-200 transform hover:scale-105 border-2 ${
                   selectedColor === color.hex 
-                    ? 'border-black ring-2 ring-black shadow-lg' 
-                    : 'border-gray-300 hover:border-black'
+                    ? 'border-black ring-2 ring-black shadow-md' 
+                    : 'border-gray-300 hover:border-gray-600'
                 }`}
                 style={{ backgroundColor: color.hex }}
                 title={`Seleccionar color ${color.name}`}
               >
                 {selectedColor === color.hex && (
-                  <span className="text-white text-xl font-bold drop-shadow-lg">✓</span>
+                  <span className="text-white text-lg font-bold drop-shadow-lg">✓</span>
                 )}
               </button>
             ))}
@@ -134,7 +134,7 @@ const HabitForm = ({ habit, onSave }) => {
 
         <button
           type="submit"
-          className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          className="w-full bg-black text-white font-semibold py-3 rounded-lg hover:bg-gray-800 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
           disabled={isSaving}
         >
           {isSaving ? '⏳ Guardando...' : (habit ? '✏️ Actualizar' : '✨ Crear Hábito')}
