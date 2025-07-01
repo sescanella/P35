@@ -3,11 +3,13 @@ import HabitForm from '../components/HabitForm.jsx'
 import HabitList from '../components/HabitList.jsx'
 import HabitChart from '../components/HabitChart.jsx'
 import DailyTracker from '../components/DailyTracker.jsx'
-import { createHabit, getHabits, updateHabit, deactivateHabit } from '../models/habitModel.js'
+import { createHabit, getHabits, updateHabit, deactivateHabit, getHabitTrackingByDate } from '../models/habitModel.js'
+import { supabase } from '../services/supabase.js'
 
 function Dashboard() {
   // Estado de hábitos y formulario
   const [habits, setHabits] = useState([])
+  const [tracking, setTracking] = useState([])
   const [editingHabit, setEditingHabit] = useState(null)
   const [showEditOptions, setShowEditOptions] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -15,30 +17,70 @@ function Dashboard() {
 
   // Cargar hábitos desde Supabase al montar
   useEffect(() => {
-    async function loadHabits() {
+    async function loadData() {
       setIsLoading(true)
       setError(null)
       try {
-        const data = await getHabits()
-        setHabits(
-          data.map(h => ({
-            id: h.id,
-            name: h.name,
-            score: h.priority_score,
-            color_hex: h.color_hex,
-            done: false
-          }))
-        )
+        // Cargar hábitos
+        const habitsData = await getHabits()
+        const formattedHabits = habitsData.map(h => ({
+          id: h.id,
+          name: h.name,
+          score: h.priority_score,
+          color: h.color_hex,
+          done: false
+        }))
+        setHabits(formattedHabits)
+
+        // Cargar datos de tracking de los últimos 7 días
+        await loadTrackingData()
       } catch (error) {
-        console.error('Error al cargar hábitos:', error)
-        setError(error.message || 'Error al cargar hábitos')
-        // Mantener los hábitos anteriores en caso de error
+        console.error('Error al cargar datos:', error)
+        setError(error.message || 'Error al cargar datos')
       } finally {
         setIsLoading(false)
       }
     }
-    loadHabits()
+    loadData()
   }, [])
+
+  // Función para cargar datos de tracking de los últimos 21 días
+  const loadTrackingData = async () => {
+    try {
+      const trackingData = []
+      
+      // Obtener los últimos 21 días
+      for (let i = 20; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const dateStr = date.toISOString().split('T')[0]
+        
+        // Obtener tracking para cada fecha
+        const { data, error } = await supabase
+          .from('p35_habit_tracking')
+          .select('habit_id, date, done')
+          .eq('date', dateStr)
+        
+        if (error) {
+          console.error('Error loading tracking data for', dateStr, error)
+          continue
+        }
+        
+        // Agregar cada registro de tracking con formato estándar
+        data.forEach(record => {
+          trackingData.push({
+            habit_id: record.habit_id,
+            date: record.date,
+            completed: record.done
+          })
+        })
+      }
+      
+      setTracking(trackingData)
+    } catch (error) {
+      console.error('Error loading tracking data:', error)
+    }
+  }
 
   // Guardar hábito (crear o editar)
   const handleSaveHabit = async (name, score, color_hex) => {
@@ -51,7 +93,7 @@ function Dashboard() {
           id: h.id,
           name: h.name,
           score: h.priority_score,
-          color_hex: h.color_hex,
+          color: h.color_hex,
           done: false
         })))
         setEditingHabit(null)
@@ -62,10 +104,17 @@ function Dashboard() {
     } else {
       try {
         const newHabit = await createHabit({ name, priority_score: Number(score), color_hex })
-        setHabits([
-          ...habits,
-          { id: newHabit.id, name: newHabit.name, score: newHabit.priority_score, color_hex: newHabit.color_hex, done: false }
-        ])
+        // Refrescar todos los hábitos
+        const data = await getHabits()
+        setHabits(data.map(h => ({
+          id: h.id,
+          name: h.name,
+          score: h.priority_score,
+          color: h.color_hex,
+          done: false
+        })))
+        // Refrescar tracking data también
+        await loadTrackingData()
       } catch (error) {
         console.error('Error al guardar el hábito en Supabase:', error)
         alert('Error al guardar el hábito en Supabase: ' + (error.message || error))
@@ -106,13 +155,6 @@ function Dashboard() {
 
   // Borrar hábito local (no usado ahora)
   const handleDelete = (id) => setHabits(habits.filter(h => h.id !== id))
-
-  // Datos para el gráfico
-  const chartData = [
-    { date: '2025-06-28', day_score: 25 },
-    { date: '2025-06-29', day_score: 40 },
-    { date: '2025-06-30', day_score: 30 },
-  ]
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -183,7 +225,7 @@ function Dashboard() {
               </div>
               <h2 className="text-xl font-bold text-black">Progreso Diario</h2>
             </div>
-            <HabitChart data={chartData} />
+            <HabitChart habits={habits} tracking={tracking} />
           </div>
         </>
       )}
