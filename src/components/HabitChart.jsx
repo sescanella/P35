@@ -223,24 +223,26 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
     <div className="space-y-6">
       {/* Mode Toggle */}
       <div className="flex justify-center">
-        <div className="bg-white border border-black rounded-lg p-1 flex">
+        <div className="bg-white rounded-lg p-1 flex" style={{ borderColor: '#1C1C1E', borderWidth: '1px', borderStyle: 'solid' }}>
           <button
             onClick={() => setMode('daily')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
               mode === 'daily'
-                ? 'bg-black text-white'
+                ? 'text-white'
                 : 'text-black hover:bg-gray-100'
             }`}
+            style={mode === 'daily' ? { backgroundColor: '#1C1C1E' } : {}}
           >
             Daily View
           </button>
           <button
             onClick={() => setMode('habits')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
               mode === 'habits'
-                ? 'bg-black text-white'
+                ? 'text-white'
                 : 'text-black hover:bg-gray-100'
             }`}
+            style={mode === 'habits' ? { backgroundColor: '#1C1C1E' } : {}}
           >
             Habits View
           </button>

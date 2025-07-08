@@ -3,6 +3,7 @@ import HabitForm from '../components/HabitForm.jsx'
 import HabitList from '../components/HabitList.jsx'
 import HabitChart from '../components/HabitChart.jsx'
 import DailyTracker from '../components/DailyTracker.jsx'
+import LoadingScreen from '../components/LoadingScreen.jsx'
 import { createHabit, getHabits, updateHabit, deactivateHabit, getHabitTrackingByDate } from '../models/habitModel.js'
 import { supabase } from '../services/supabase.js'
 
@@ -21,8 +22,12 @@ function Dashboard() {
       setIsLoading(true)
       setError(null)
       try {
+        console.log('Iniciando carga de datos...')
+        
         // Cargar hábitos
         const habitsData = await getHabits()
+        console.log('Hábitos cargados:', habitsData)
+        
         const formattedHabits = habitsData.map(h => ({
           id: h.id,
           name: h.name,
@@ -34,10 +39,12 @@ function Dashboard() {
 
         // Cargar datos de tracking de los últimos 7 días
         await loadTrackingData()
+        console.log('Datos cargados exitosamente')
       } catch (error) {
         console.error('Error al cargar datos:', error)
         setError(error.message || 'Error al cargar datos')
       } finally {
+        console.log('Finalizando carga, setting isLoading to false')
         setIsLoading(false)
       }
     }
@@ -115,10 +122,29 @@ function Dashboard() {
         })))
         // Refrescar tracking data también
         await loadTrackingData()
+        // Refrescar hábitos después de crear uno nuevo
+        await refreshHabits()
       } catch (error) {
         console.error('Error al guardar el hábito en Supabase:', error)
         alert('Error al guardar el hábito en Supabase: ' + (error.message || error))
       }
+    }
+  }
+
+  // Función para refrescar hábitos después de crear uno nuevo
+  const refreshHabits = async () => {
+    try {
+      const habitsData = await getHabits()
+      const formattedHabits = habitsData.map(h => ({
+        id: h.id,
+        name: h.name,
+        score: h.priority_score,
+        color: h.color_hex,
+        done: false
+      }))
+      setHabits(formattedHabits)
+    } catch (error) {
+      console.error('Error al refrescar hábitos:', error)
     }
   }
 
@@ -158,16 +184,16 @@ function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Show LoadingScreen while loading */}
+      <LoadingScreen isVisible={isLoading} />
+      
       {error && (
         <div className="mb-4 p-4 bg-white border border-black text-black">
           {error}
         </div>
       )}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-32">
-          <div className="text-black">Cargando hábitos...</div>
-        </div>
-      ) : (
+      
+      {!isLoading && (
         <>
           {/* Hero Section */}
           <div className="text-center mb-6">
@@ -197,6 +223,7 @@ function Dashboard() {
               <CollapsibleHabitForm 
                 habit={editingHabit} 
                 onSave={handleSaveHabit}
+                onHabitCreated={refreshHabits}
                 showEditOptions={showEditOptions}
                 onDeactivate={() => handleDeactivate(editingHabit.id)}
                 onCancel={() => { setEditingHabit(null); setShowEditOptions(false); }}
@@ -234,7 +261,7 @@ function Dashboard() {
 }
 
 // Componente HabitForm Colapsable
-function CollapsibleHabitForm({ habit, onSave, showEditOptions, onDeactivate, onCancel }) {
+function CollapsibleHabitForm({ habit, onSave, onHabitCreated, showEditOptions, onDeactivate, onCancel }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -261,21 +288,43 @@ function CollapsibleHabitForm({ habit, onSave, showEditOptions, onDeactivate, on
 
       {/* Contenido expandible */}
       <div className={`transition-all duration-300 ease-in-out ${
-        isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+        isExpanded ? 'max-h-fit opacity-100' : 'max-h-0 opacity-0'
       } overflow-hidden`}>
-        <div className="px-4 pb-4 border-t border-gray-100">
-          <div className="pt-4">
-            <HabitForm habit={habit} onSave={onSave} />
+        <div className="p-4 border-t border-gray-100">
+          <div className="pt-0">
+            {/* Use new HabitForm for creating new habits */}
+            {!habit && (
+              <HabitForm onHabitCreated={onHabitCreated} />
+            )}
+            
+            {/* For editing existing habits, we'd need an EditHabitForm component */}
+            {habit && (
+              <div className="text-center py-8 text-gray-500">
+                <p>La edición de hábitos aún no está implementada.</p>
+                <p className="text-sm mt-2">Por ahora, puedes crear un nuevo hábito.</p>
+              </div>
+            )}
+            
             {showEditOptions && (
               <div className="flex gap-2 mt-4">
                 <button
-                  className="flex-1 bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 hover:scale-105 transition-all duration-200 font-medium"
+                  className="flex-1 text-white py-2 px-4 rounded-lg hover:opacity-80 hover:scale-105 transition-all duration-200 font-medium"
+                  style={{ backgroundColor: '#1C1C1E' }}
                   onClick={onDeactivate}
                 >
                   Eliminar
                 </button>
                 <button
-                  className="flex-1 bg-white text-black border border-black py-2 px-4 rounded-lg hover:bg-black hover:text-white hover:scale-105 transition-all duration-200 font-medium"
+                  className="flex-1 bg-white text-black border py-2 px-4 rounded-lg hover:text-white hover:scale-105 transition-all duration-200 font-medium"
+                  style={{ borderColor: '#1C1C1E' }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#1C1C1E';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.color = 'black';
+                  }}
                   onClick={onCancel}
                 >
                   Cancelar
@@ -291,17 +340,17 @@ function CollapsibleHabitForm({ habit, onSave, showEditOptions, onDeactivate, on
 
 // Componente HabitList Colapsable
 function CollapsibleHabitList({ habits, onToggleDone, onEdit, onDelete }) {
-  const [isExpanded, setIsExpanded] = useState(true) // Expandido por defecto
+  const [isExpanded, setIsExpanded] = useState(false) // Comprimido por defecto
 
   return (
-    <div className="bg-white border border-black rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden" style={{ borderColor: '#1C1C1E', borderWidth: '1px', borderStyle: 'solid' }}>
       {/* Header clickeable */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
             <span className="text-sm text-white">📝</span>
           </div>
           <h3 className="text-lg font-bold text-black">Mis Hábitos</h3>
@@ -318,10 +367,10 @@ function CollapsibleHabitList({ habits, onToggleDone, onEdit, onDelete }) {
 
       {/* Contenido expandible */}
       <div className={`transition-all duration-300 ease-in-out ${
-        isExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+        isExpanded ? 'max-h-fit opacity-100' : 'max-h-0 opacity-0'
       } overflow-hidden`}>
-        <div className="px-4 pb-4 border-t border-gray-100">
-          <div className="pt-4">
+        <div className="p-4 border-t border-gray-100">
+          <div className="pt-0">
             <HabitList
               habits={habits}
               onToggleDone={onToggleDone}

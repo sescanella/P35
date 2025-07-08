@@ -257,7 +257,20 @@ const DailyTracker = () => {
                       <button
                         onClick={() => removeHabitInstance(habit.id)}
                         disabled={count === 0}
-                        className="w-8 h-8 rounded-full bg-white text-black border border-black hover:bg-gray-100 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 text-xs"
+                        className="w-8 h-8 rounded-full bg-white text-black border hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 text-xs"
+                        style={{ borderColor: '#1C1C1E' }}
+                        onMouseEnter={(e) => {
+                          if (!e.target.disabled) {
+                            e.target.style.backgroundColor = '#1C1C1E';
+                            e.target.style.color = 'white';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!e.target.disabled) {
+                            e.target.style.backgroundColor = 'white';
+                            e.target.style.color = 'black';
+                          }
+                        }}
                         title="Quitar una instancia"
                       >
                         ➖
@@ -269,7 +282,8 @@ const DailyTracker = () => {
                       
                       <button
                         onClick={() => addHabitInstance(habit.id)}
-                        className="w-8 h-8 rounded-full bg-black text-white hover:bg-gray-800 hover:scale-105 flex items-center justify-center transition-all duration-200 text-xs"
+                        className="w-8 h-8 rounded-full text-white hover:opacity-80 hover:scale-105 flex items-center justify-center transition-all duration-200 text-xs"
+                        style={{ backgroundColor: '#1C1C1E' }}
                         title="Agregar una instancia"
                       >
                         ➕
@@ -296,7 +310,8 @@ const DailyTracker = () => {
         <button
           onClick={finalizeDay}
           disabled={isLoading || totalScore === 0}
-          className="flex-1 bg-black text-white font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          className="flex-1 text-white font-semibold py-3 px-4 rounded-lg hover:opacity-80 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          style={{ backgroundColor: '#1C1C1E' }}
         >
           {isLoading ? '⏳ Finalizando...' : '✅ Finalizar Día'}
         </button>
@@ -304,7 +319,16 @@ const DailyTracker = () => {
         <button
           onClick={clearDay}
           disabled={isLoading || totalScore === 0}
-          className="px-6 bg-white text-black border border-black font-semibold py-3 rounded-lg hover:bg-black hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          className="px-6 bg-white text-black border font-semibold py-3 rounded-lg hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          style={{ borderColor: '#1C1C1E' }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#1C1C1E';
+            e.target.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'white';
+            e.target.style.color = 'black';
+          }}
         >
           🧹 Limpiar
         </button>

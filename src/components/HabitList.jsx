@@ -21,16 +21,24 @@ const HabitList = ({ habits = [], onEdit, onDelete }) => {
       {habits.map((habit, index) => (
         <div
           key={habit.id}
-          className="group relative bg-white border border-gray-300 rounded-2xl p-4 hover:border-black transition-all duration-300 hover:shadow-md"
-          style={{ animationDelay: `${index * 100}ms` }}
+          className="group relative bg-white border border-gray-300 rounded-2xl p-4 transition-all duration-300 hover:shadow-md"
+          style={{ 
+            animationDelay: `${index * 100}ms`,
+            borderColor: habit.active ? '#1C1C1E' : '#d1d5db'
+          }}
+          onMouseEnter={(e) => e.target.style.borderColor = '#1C1C1E'}
+          onMouseLeave={(e) => e.target.style.borderColor = habit.active ? '#1C1C1E' : '#d1d5db'}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-1">
               {/* Color indicator */}
               <div 
-                className="w-4 h-4 rounded-full border-2 border-black shadow-sm flex-shrink-0"
-                style={{ backgroundColor: habit.color_hex || '#9CA3AF' }}
-                title={`Color: ${habit.color_hex || 'Sin color'}`}
+                className="w-6 h-6 rounded-full border-2 shadow-sm flex-shrink-0"
+                style={{ 
+                  backgroundColor: habit.color || habit.color_hex || '#9CA3AF',
+                  borderColor: '#1C1C1E'
+                }}
+                title={`Color: ${habit.color || habit.color_hex || 'Sin color'}`}
               ></div>
               
               <div className="flex-1">
@@ -46,10 +54,11 @@ const HabitList = ({ habits = [], onEdit, onDelete }) => {
             <div className="flex space-x-2 opacity-100">
               <button
                 onClick={() => onEdit && onEdit(habit)}
-                className="p-2 bg-black text-white hover:bg-gray-800 rounded-xl transition-colors duration-200"
+                className="text-white font-semibold py-2 px-3 rounded-lg hover:opacity-80 hover:scale-105 transition-all duration-200"
+                style={{ backgroundColor: '#1C1C1E' }}
                 title="Editar hábito"
               >
-                <span className="text-lg">✏️</span>
+                <span className="text-sm">✏️</span>
               </button>
               <button
                 onClick={() => {
@@ -57,10 +66,19 @@ const HabitList = ({ habits = [], onEdit, onDelete }) => {
                     onDelete && onDelete(habit.id)
                   }
                 }}
-                className="p-2 bg-white text-black border border-black hover:bg-gray-100 rounded-xl transition-colors duration-200"
+                className="bg-white text-black border font-semibold py-2 px-3 rounded-lg hover:text-white hover:scale-105 transition-all duration-200"
+                style={{ borderColor: '#1C1C1E' }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#1C1C1E';
+                  e.target.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'white';
+                  e.target.style.color = 'black';
+                }}
                 title="Eliminar hábito"
               >
-                <span className="text-lg">🗑️</span>
+                <span className="text-sm">🗑️</span>
               </button>
             </div>
           </div>
