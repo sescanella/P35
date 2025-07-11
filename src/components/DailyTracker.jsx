@@ -4,19 +4,27 @@ import {
   insertHabitTracking, 
   calculateDailyScore, 
   getHabitTrackingByDate,
-  clearHabitTrackingByDate 
+  clearHabitTrackingByDate,
+  saveDailyNote,
+  getDailyNote,
+  calculateNotePoints
 } from '../models/habitModel.js'
 import { supabase } from '../services/supabase.js'
+import { getCurrentLocalDate, formatLocalDate, isToday } from '../utils/dateUtils.js'
+import { useTheme } from '../contexts/ThemeContext.jsx'
 
 const MAX_INSTANCES = 7; // or whatever value you need
 
 const DailyTracker = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const { theme } = useTheme();
+  const [selectedDate, setSelectedDate] = useState(getCurrentLocalDate())
   const [habits, setHabits] = useState([])
   const [habitCounts, setHabitCounts] = useState({})
   const [totalScore, setTotalScore] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [dailyNote, setDailyNote] = useState('')
+  const [notePoints, setNotePoints] = useState(0)
 
   // Cargar hábitos activos al montar el componente
   useEffect(() => {
@@ -26,6 +34,7 @@ const DailyTracker = () => {
   // Cargar datos de tracking cuando cambia la fecha
   useEffect(() => {
     loadTrackingData()
+    loadDailyNote()
   }, [selectedDate, habits])
 
   const loadHabits = async () => {
@@ -64,6 +73,18 @@ const DailyTracker = () => {
     }
   }
 
+  const loadDailyNote = async () => {
+    try {
+      const noteData = await getDailyNote(selectedDate)
+      setDailyNote(noteData.note)
+      setNotePoints(noteData.points)
+    } catch (error) {
+      console.error('Error loading daily note:', error)
+      setDailyNote('')
+      setNotePoints(0)
+    }
+  }
+
   const calculateCurrentTotal = (counts) => {
     let total = 0
     habits.forEach(habit => {
@@ -71,7 +92,33 @@ const DailyTracker = () => {
       const score = habit.priority_score || 0
       total += count * score
     })
-    setTotalScore(total)
+    // Sumar puntos de notas silenciosamente
+    setTotalScore(total + notePoints)
+  }
+
+  const handleNoteChange = async (e) => {
+    const newNote = e.target.value
+    setDailyNote(newNote)
+    
+    // Calcular puntos automáticamente
+    const newNotePoints = calculateNotePoints(newNote)
+    setNotePoints(newNotePoints)
+    
+    // Recalcular total incluyendo nuevos puntos de nota
+    let habitTotal = 0
+    habits.forEach(habit => {
+      const count = habitCounts[habit.id] || 0
+      const score = habit.priority_score || 0
+      habitTotal += count * score
+    })
+    setTotalScore(habitTotal + newNotePoints)
+    
+    // Auto-guardar la nota (opcional)
+    try {
+      await saveDailyNote(selectedDate, newNote)
+    } catch (error) {
+      console.error('Error auto-saving note:', error)
+    }
   }
 
   const addHabitInstance = async (habitId) => {
@@ -136,8 +183,16 @@ const DailyTracker = () => {
 
     setIsLoading(true)
     try {
+      // Guardar nota si hay contenido
+      if (dailyNote.trim()) {
+        await saveDailyNote(selectedDate, dailyNote.trim())
+      }
+      
+      // Calcular puntaje diario (incluye hábitos + notas)
       const result = await calculateDailyScore(selectedDate)
-      setMessage(`🎉 Día finalizado! Puntaje total: ${result.totalScore} puntos`)
+      const finalTotal = result.totalScore
+      
+      setMessage(`🎉 Día finalizado! Puntaje total: ${finalTotal} puntos`)
       setTimeout(() => setMessage(''), 4000)
     } catch (error) {
       console.error('Error finalizing day:', error)
@@ -175,52 +230,80 @@ const DailyTracker = () => {
   }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString + 'T00:00:00')
-    return date.toLocaleDateString('es-ES', { 
-      weekday: 'long', 
-      year: 'numeric', 
+    return formatLocalDate(dateString, {
+      weekday: 'long',
+      year: 'numeric',
       month: 'long', 
       day: 'numeric' 
     })
   }
 
-  const isToday = selectedDate === new Date().toISOString().split('T')[0]
+  const isTodaySelected = isToday(selectedDate)
 
   return (
-    <div className="bg-white border border-black rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 h-fit">
+    <div 
+      className="border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 h-fit"
+      style={{ 
+        backgroundColor: theme.card, 
+        borderColor: theme.border 
+      }}
+    >
       {/* Header with date selector */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-            <span className="text-lg text-white">📅</span>
+          <div 
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: theme.accent }}
+          >
+            <span 
+              className="text-lg" 
+              style={{ color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF' }}
+            >
+              📅
+            </span>
           </div>
-          <h3 className="text-xl font-bold text-black">Registro Diario</h3>
+          <h3 className="text-xl font-bold" style={{ color: theme.text }}>Registro Diario</h3>
         </div>
         
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-black">
+          <label className="block text-sm font-medium" style={{ color: theme.text }}>
             Fecha del registro:
           </label>
           <input
             type="date"
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
-            className="w-full bg-white border border-black rounded-lg px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
+            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200"
+            style={{ 
+              backgroundColor: theme.card,
+              color: theme.text,
+              borderColor: theme.border
+            }}
           />
-          <p className="text-sm text-gray-600">
+          <p className="text-sm" style={{ color: theme.textSecondary }}>
             Selecciona un día para registrar el progreso de tus hábitos.
-            {isToday && <span className="ml-2 px-3 py-1 bg-black text-white rounded-full text-xs font-medium">Hoy</span>}
+            {isTodaySelected && (
+              <span 
+                className="ml-2 px-3 py-1 rounded-full text-xs font-medium"
+                style={{ 
+                  backgroundColor: theme.accent, 
+                  color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF' 
+                }}
+              >
+                Hoy
+              </span>
+            )}
           </p>
         </div>
       </div>
 
       {/* Habits section */}
       <div className="mb-8">
-        <h4 className="text-lg font-semibold text-black mb-4">Hábitos disponibles:</h4>
+        <h4 className="text-lg font-semibold mb-4" style={{ color: theme.text }}>Hábitos disponibles:</h4>
         
         {habits.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">No hay hábitos activos</p>
+            <p style={{ color: theme.textSecondary }}>No hay hábitos activos</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -233,23 +316,31 @@ const DailyTracker = () => {
               return (
                 <div
                   key={habit.id}
-                  className="bg-white border border-gray-300 rounded-lg p-4 hover:border-black transition-all duration-200"
+                  className="border rounded-lg p-4 hover:shadow-md transition-all duration-300"
+                  style={{ 
+                    backgroundColor: theme.card,
+                    borderColor: theme.borderLight,
+                    ':hover': { borderColor: theme.border }
+                  }}
+                  onMouseEnter={(e) => e.target.style.borderColor = theme.border}
+                  onMouseLeave={(e) => e.target.style.borderColor = theme.borderLight}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 flex-1">
                       {/* Color indicator */}
                       <div 
-                        className="w-4 h-4 rounded-full border border-black flex-shrink-0"
-                        style={{ backgroundColor: habit.color_hex || '#9CA3AF' }}
+                        className="w-4 h-4 rounded-full border flex-shrink-0"
+                        style={{ 
+                          backgroundColor: habit.color_hex || '#9CA3AF',
+                          borderColor: theme.border
+                        }}
                         title={`Color: ${habit.color_hex || 'Sin color'}`}
                       ></div>
                       
                       <div className="flex-1 min-w-0">
-                        <h5 className="font-semibold text-black text-sm truncate">{habit.name}</h5>
-                        <div className="text-xs text-gray-600">
-                          {habitScore} pts × {count} = {currentScore} pts
-                          <span className="text-gray-500 ml-1">(máx: {maxScore})</span>
-                        </div>
+                        <h5 className="font-semibold text-sm truncate" style={{ color: theme.text }}>
+                          {habit.name}
+                        </h5>
                       </div>
                     </div>
                     
@@ -257,18 +348,22 @@ const DailyTracker = () => {
                       <button
                         onClick={() => removeHabitInstance(habit.id)}
                         disabled={count === 0}
-                        className="w-8 h-8 rounded-full bg-white text-black border hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 text-xs"
-                        style={{ borderColor: '#1C1C1E' }}
+                        className="w-8 h-8 rounded-full border hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 text-xs"
+                        style={{ 
+                          backgroundColor: theme.card,
+                          borderColor: theme.border,
+                          color: theme.text
+                        }}
                         onMouseEnter={(e) => {
                           if (!e.target.disabled) {
-                            e.target.style.backgroundColor = '#1C1C1E';
-                            e.target.style.color = 'white';
+                            e.target.style.backgroundColor = theme.accent;
+                            e.target.style.color = theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!e.target.disabled) {
-                            e.target.style.backgroundColor = 'white';
-                            e.target.style.color = 'black';
+                            e.target.style.backgroundColor = theme.card;
+                            e.target.style.color = theme.text;
                           }
                         }}
                         title="Quitar una instancia"
@@ -276,14 +371,17 @@ const DailyTracker = () => {
                         ➖
                       </button>
                       
-                      <span className="w-6 text-center font-bold text-sm">
+                      <span className="w-6 text-center font-bold text-sm" style={{ color: theme.text }}>
                         {count}
                       </span>
                       
                       <button
                         onClick={() => addHabitInstance(habit.id)}
-                        className="w-8 h-8 rounded-full text-white hover:opacity-80 hover:scale-105 flex items-center justify-center transition-all duration-200 text-xs"
-                        style={{ backgroundColor: '#1C1C1E' }}
+                        className="w-8 h-8 rounded-full hover:opacity-80 hover:scale-105 flex items-center justify-center transition-all duration-200 text-xs"
+                        style={{ 
+                          backgroundColor: theme.accent,
+                          color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+                        }}
                         title="Agregar una instancia"
                       >
                         ➕
@@ -298,10 +396,70 @@ const DailyTracker = () => {
       </div>
 
       {/* Total score */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+      <div 
+        className="border rounded-lg p-6 mb-6 transition-all duration-300"
+        style={{ 
+          backgroundColor: theme.secondary, 
+          borderColor: theme.borderLight 
+        }}
+      >
         <div className="text-center">
-          <p className="text-lg text-black mb-2 font-medium">Puntaje total del día</p>
-          <p className="text-4xl font-bold text-black">{totalScore} puntos</p>
+          <p className="text-lg mb-2 font-medium" style={{ color: theme.text }}>Puntaje total del día</p>
+          <p className="text-4xl font-bold" style={{ color: theme.text }}>{totalScore} puntos</p>
+          {notePoints > 0 && (
+            <p className="text-sm mt-1" style={{ color: theme.textSecondary }}>
+              (incluye {notePoints} pts de notas)
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Daily Notes Section */}
+      <div 
+        className="border rounded-lg p-6 mb-6 transition-all duration-300"
+        style={{ 
+          backgroundColor: theme.card, 
+          borderColor: theme.borderLight 
+        }}
+      >
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-lg font-medium" style={{ color: theme.text }}>
+              📝 Notas del día
+            </label>
+            {notePoints > 0 && (
+              <span 
+                className="text-sm px-2 py-1 rounded-full"
+                style={{ 
+                  backgroundColor: theme.secondary, 
+                  color: theme.text 
+                }}
+              >
+                +{notePoints} pts
+              </span>
+            )}
+          </div>
+          <textarea
+            value={dailyNote}
+            onChange={handleNoteChange}
+            placeholder={`¿Cómo estuvo tu día? Comparte tus reflexiones...${'\n'}(1 punto por cada 20 caracteres)`}
+            className="w-full h-32 p-4 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
+            style={{
+              backgroundColor: theme.card,
+              color: theme.text,
+              borderColor: theme.border,
+              placeholderColor: theme.textSecondary
+            }}
+            maxLength={2000}
+          />
+          <div className="flex justify-between items-center text-sm">
+            <span style={{ color: theme.textSecondary }}>
+              {dailyNote.length}/2000 caracteres
+            </span>
+            <span style={{ color: theme.textSecondary }}>
+              Puntos calculados: {notePoints}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -310,8 +468,11 @@ const DailyTracker = () => {
         <button
           onClick={finalizeDay}
           disabled={isLoading || totalScore === 0}
-          className="flex-1 text-white font-semibold py-3 px-4 rounded-lg hover:opacity-80 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          style={{ backgroundColor: '#1C1C1E' }}
+          className="flex-1 font-semibold py-3 px-4 rounded-lg hover:opacity-80 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          style={{ 
+            backgroundColor: theme.accent,
+            color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+          }}
         >
           {isLoading ? '⏳ Finalizando...' : '✅ Finalizar Día'}
         </button>
@@ -319,15 +480,21 @@ const DailyTracker = () => {
         <button
           onClick={clearDay}
           disabled={isLoading || totalScore === 0}
-          className="px-6 bg-white text-black border font-semibold py-3 rounded-lg hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          style={{ borderColor: '#1C1C1E' }}
+          className="px-6 font-semibold py-3 rounded-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          style={{ 
+            backgroundColor: theme.card,
+            color: theme.text,
+            borderColor: theme.border,
+            borderWidth: '1px',
+            borderStyle: 'solid'
+          }}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = '#1C1C1E';
-            e.target.style.color = 'white';
+            e.target.style.backgroundColor = theme.accent;
+            e.target.style.color = theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = 'white';
-            e.target.style.color = 'black';
+            e.target.style.backgroundColor = theme.card;
+            e.target.style.color = theme.text;
           }}
         >
           🧹 Limpiar
@@ -336,8 +503,14 @@ const DailyTracker = () => {
 
       {/* Status message */}
       {message && (
-        <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg">
-          <p className="text-black text-center">{message}</p>
+        <div 
+          className="mt-4 p-3 border rounded-lg transition-all duration-300"
+          style={{ 
+            backgroundColor: theme.secondary, 
+            borderColor: theme.borderLight 
+          }}
+        >
+          <p className="text-center" style={{ color: theme.text }}>{message}</p>
         </div>
       )}
     </div>

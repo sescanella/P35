@@ -117,24 +117,36 @@ export async function calculateDailyScore(date) {
     habitCounts[habitId].count++
   })
   
-  // Calcular el puntaje total
-  let totalScore = 0
+  // Calcular el puntaje total de hábitos
+  let totalHabitScore = 0
   Object.values(habitCounts).forEach(habit => {
-    totalScore += habit.count * habit.priority_score
+    totalHabitScore += habit.count * habit.priority_score
   })
   
-  // Insertar o actualizar en p35_daily_score
+  // Obtener nota existente para preservar puntos de nota
+  const existingData = await getDailyScore(date)
+  const notePoints = existingData ? existingData.note_points || 0 : 0
+  const dailyNote = existingData ? existingData.daily_note || null : null
+  
+  // Insertar o actualizar en p35_daily_score con puntos de hábitos y notas
   const { data, error } = await supabase
     .from('p35_daily_score')
     .upsert([{ 
       date, 
-      habit_score_total: totalScore 
+      habit_score_total: totalHabitScore,
+      daily_note: dailyNote,
+      note_points: notePoints
     }])
     .select()
     .single()
   
   if (error) throw error
-  return { totalScore, data }
+  return { 
+    totalScore: totalHabitScore + notePoints, 
+    habitScore: totalHabitScore,
+    notePoints: notePoints,
+    data 
+  }
 }
 
 // Elimina todas las instancias de hábitos para una fecha específica
@@ -155,4 +167,57 @@ export async function getDailyScore(date) {
     .single()
   if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows returned
   return data
+}
+
+// Calcula puntos de nota basado en caracteres (cada 20 caracteres = 1 punto)
+export function calculateNotePoints(noteText) {
+  if (!noteText || typeof noteText !== 'string') return 0
+  const charCount = noteText.length
+  return Math.floor(charCount / 20)
+}
+
+// Guarda o actualiza la nota diaria y recalcula el puntaje total
+export async function saveDailyNote(date, noteText) {
+  try {
+    const notePoints = calculateNotePoints(noteText)
+    
+    // Obtener el puntaje de hábitos actual
+    const existingData = await getDailyScore(date)
+    const habitScoreTotal = existingData ? existingData.habit_score_total : 0
+    
+    // Actualizar o insertar con la nueva nota
+    const { data, error } = await supabase
+      .from('p35_daily_score')
+      .upsert([{ 
+        date, 
+        habit_score_total: habitScoreTotal,
+        daily_note: noteText,
+        note_points: notePoints
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return { data, notePoints, totalCharacters: noteText.length }
+  } catch (error) {
+    console.error('Error saving daily note:', error)
+    throw error
+  }
+}
+
+// Obtiene la nota diaria para una fecha específica
+export async function getDailyNote(date) {
+  try {
+    const { data, error } = await supabase
+      .from('p35_daily_score')
+      .select('daily_note, note_points')
+      .eq('date', date)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') throw error
+    return data ? { note: data.daily_note || '', points: data.note_points || 0 } : { note: '', points: 0 }
+  } catch (error) {
+    console.error('Error getting daily note:', error)
+    return { note: '', points: 0 }
+  }
 }

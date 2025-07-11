@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 
 /**
  * Pantalla de carga con diseño minimalista inspirado en Notion
@@ -12,6 +13,7 @@ const LoadingScreen = ({
   showDots = true,
   className = ""
 }) => {
+  const { theme } = useTheme();
   // Textos relacionados con hábitos que rotan
   const defaultHabitTexts = [
     "Leyendo...",
@@ -53,7 +55,10 @@ const LoadingScreen = ({
   if (!isVisible) return null;
 
   return (
-    <div className={`fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center ${className}`}>
+    <div 
+      className={`fixed inset-0 backdrop-blur-sm z-50 flex items-center justify-center transition-all duration-300 ${className}`}
+      style={{ backgroundColor: `${theme.primary}F2` }} // F2 = 95% opacity
+    >
       <div className="flex flex-col items-center justify-center space-y-8 p-8">
         {/* Animated Dots */}
         {showDots && (
@@ -61,8 +66,9 @@ const LoadingScreen = ({
             {[0, 1, 2].map((index) => (
               <div
                 key={index}
-                className="w-3 h-3 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 shadow-lg animate-bounce-wave"
+                className="w-3 h-3 rounded-full shadow-lg animate-bounce-wave"
                 style={{
+                  background: `linear-gradient(135deg, ${theme.accent}, ${theme.text})`,
                   animationDelay: `${index * 0.2}s`,
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
                 }}
@@ -74,19 +80,26 @@ const LoadingScreen = ({
         {/* Rotating Habit Text */}
         <div className="text-center">
           <p 
-            className={`text-lg font-medium text-gray-700 transition-all duration-300 ease-in-out transform ${
+            className={`text-lg font-medium transition-all duration-300 ease-in-out transform ${
               isTextVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-2'
             }`}
+            style={{ color: theme.textSecondary }}
           >
             {habitTexts[currentTextIndex]}
           </p>
         </div>
 
         {/* Subtle progress indicator */}
-        <div className="w-32 h-1 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-gray-400 to-gray-600 rounded-full animate-progress" />
+        <div 
+          className="w-32 h-1 rounded-full overflow-hidden"
+          style={{ backgroundColor: theme.borderLight }}
+        >
+          <div 
+            className="h-full rounded-full animate-progress" 
+            style={{ background: `linear-gradient(90deg, ${theme.accent}, ${theme.text})` }}
+          />
         </div>
       </div>
     </div>
@@ -95,6 +108,8 @@ const LoadingScreen = ({
 
 // Componente más simple solo con dots (para uso en otros lugares)
 export const LoadingDots = ({ size = 'md', className = "" }) => {
+  const { theme } = useTheme();
+  
   const sizeClasses = {
     sm: 'w-2 h-2',
     md: 'w-3 h-3',
@@ -106,8 +121,9 @@ export const LoadingDots = ({ size = 'md', className = "" }) => {
       {[0, 1, 2].map((index) => (
         <div
           key={index}
-          className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-gray-600 to-gray-800 shadow-sm animate-bounce-wave`}
+          className={`${sizeClasses[size]} rounded-full shadow-sm animate-bounce-wave`}
           style={{
+            background: `linear-gradient(135deg, ${theme.accent}, ${theme.text})`,
             animationDelay: `${index * 0.2}s`
           }}
         />

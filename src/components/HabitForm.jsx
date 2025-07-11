@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 
 /**
  * Formulario para crear hábitos con sistema de puntuación basado en dimensiones.
@@ -9,6 +10,7 @@ import { supabase } from '../services/supabase';
  * - Time/Effort Required (20%)
  */
 const HabitForm = ({ onHabitCreated }) => {
+  const { theme } = useTheme();
   // Initial state values
   const initialState = {
     name: '',
@@ -167,15 +169,24 @@ const HabitForm = ({ onHabitCreated }) => {
         {/* Habit Name */}
         <div className="space-y-2">
           <label 
-            className="text-black font-medium text-sm" 
+            className="font-medium text-sm" 
             htmlFor="habit-name"
+            style={{ color: theme.text }}
           >
             Nombre del hábito
           </label>
           <input
             id="habit-name"
             type="text"
-            className="w-full bg-white px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-all duration-200"
+            className="w-full px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
+            style={{ 
+              backgroundColor: theme.card,
+              color: theme.text,
+              borderColor: theme.border,
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderRadius: '0.5rem'
+            }}
             value={name}
             onChange={e => setName(e.target.value)}
             required
@@ -191,10 +202,16 @@ const HabitForm = ({ onHabitCreated }) => {
         {/* Personal Impact Slider */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="text-black font-medium text-sm">
+            <label className="font-medium text-sm" style={{ color: theme.text }}>
               Impacto Personal
             </label>
-            <div className="text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
+            <div 
+              className="text-xs font-bold w-6 h-6 rounded flex items-center justify-center" 
+              style={{ 
+                backgroundColor: theme.accent,
+                color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+              }}
+            >
               {impact}
             </div>
           </div>
@@ -206,14 +223,15 @@ const HabitForm = ({ onHabitCreated }) => {
               step="1"
               value={impact}
               onChange={e => setImpact(parseInt(e.target.value))}
-              className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
               style={{
-                background: `linear-gradient(to right, #1C1C1E 0%, #1C1C1E ${((impact - 1) / 4) * 100}%, #e5e7eb ${((impact - 1) / 4) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${((impact - 1) / 4) * 100}%, ${theme.borderLight} ${((impact - 1) / 4) * 100}%, ${theme.borderLight} 100%)`,
+                outline: 'none'
               }}
               aria-label={`Impacto personal: ${impact} de 5`}
               aria-describedby="impact-desc"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: theme.textSecondary }}>
               <span>Bajo</span>
               <span>Alto</span>
             </div>
@@ -225,10 +243,16 @@ const HabitForm = ({ onHabitCreated }) => {
 
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="text-black font-medium text-sm">
+            <label className="font-medium text-sm" style={{ color: theme.text }}>
               Dificultad Percibida
             </label>
-            <div className="text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
+            <div 
+              className="text-xs font-bold w-6 h-6 rounded flex items-center justify-center" 
+              style={{ 
+                backgroundColor: theme.accent,
+                color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+              }}
+            >
               {difficulty}
             </div>
           </div>
@@ -240,14 +264,15 @@ const HabitForm = ({ onHabitCreated }) => {
               step="1"
               value={difficulty}
               onChange={e => setDifficulty(parseInt(e.target.value))}
-              className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
               style={{
-                background: `linear-gradient(to right, #1C1C1E 0%, #1C1C1E ${((difficulty - 1) / 4) * 100}%, #e5e7eb ${((difficulty - 1) / 4) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${((difficulty - 1) / 4) * 100}%, ${theme.borderLight} ${((difficulty - 1) / 4) * 100}%, ${theme.borderLight} 100%)`,
+                outline: 'none'
               }}
               aria-label={`Dificultad percibida: ${difficulty} de 5`}
               aria-describedby="difficulty-desc"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: theme.textSecondary }}>
               <span>Fácil</span>
               <span>Difícil</span>
             </div>
@@ -259,10 +284,16 @@ const HabitForm = ({ onHabitCreated }) => {
 
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="text-black font-medium text-sm">
+            <label className="font-medium text-sm" style={{ color: theme.text }}>
               Tiempo/Esfuerzo Requerido
             </label>
-            <div className="text-white text-xs font-bold w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
+            <div 
+              className="text-xs font-bold w-6 h-6 rounded flex items-center justify-center" 
+              style={{ 
+                backgroundColor: theme.accent,
+                color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+              }}
+            >
               {timeEffort}
             </div>
           </div>
@@ -274,14 +305,15 @@ const HabitForm = ({ onHabitCreated }) => {
               step="1"
               value={timeEffort}
               onChange={e => setTimeEffort(parseInt(e.target.value))}
-              className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="w-full h-3 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
               style={{
-                background: `linear-gradient(to right, #1C1C1E 0%, #1C1C1E ${((timeEffort - 1) / 4) * 100}%, #e5e7eb ${((timeEffort - 1) / 4) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${((timeEffort - 1) / 4) * 100}%, ${theme.borderLight} ${((timeEffort - 1) / 4) * 100}%, ${theme.borderLight} 100%)`,
+                outline: 'none'
               }}
               aria-label={`Tiempo y esfuerzo requerido: ${timeEffort} de 5`}
               aria-describedby="time-effort-desc"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs mt-1" style={{ color: theme.textSecondary }}>
               <span>Poco</span>
               <span>Mucho</span>
             </div>
@@ -292,16 +324,19 @@ const HabitForm = ({ onHabitCreated }) => {
         </div>
 
         {/* Calculated Priority Score */}
-        <div className="bg-gray-50 p-4 text-center mx-2 mb-4">
-          <div className="text-4xl font-bold text-black mb-1" aria-live="polite">
+        <div 
+          className="p-4 text-center mx-2 mb-4 rounded-lg transition-all duration-300"
+          style={{ backgroundColor: theme.secondary }}
+        >
+          <div className="text-4xl font-bold mb-1" style={{ color: theme.text }} aria-live="polite">
             {priorityScore}
           </div>
-          <div className="text-xs text-gray-600">Puntuación calculada</div>
+          <div className="text-xs" style={{ color: theme.textSecondary }}>Puntuación calculada</div>
         </div>
 
         {/* Color Picker */}
         <div className="space-y-2">
-          <label className="text-black font-medium text-sm">
+          <label className="font-medium text-sm" style={{ color: theme.text }}>
             Color del hábito *
           </label>
           <div 
@@ -314,12 +349,16 @@ const HabitForm = ({ onHabitCreated }) => {
                 key={color.hex}
                 type="button"
                 onClick={() => setSelectedColor(color.hex)}
-                className={`w-full h-10 transition-all duration-200 transform hover:scale-105 focus:scale-105 border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${
+                className={`w-full h-10 transition-all duration-200 transform hover:scale-105 focus:scale-105 border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   selectedColor === color.hex 
-                    ? 'border-black ring-2 ring-black shadow-md' 
-                    : 'border-gray-300 hover:border-gray-600'
+                    ? 'ring-2 shadow-md' 
+                    : 'hover:border-gray-600'
                 }`}
-                style={{ backgroundColor: color.hex }}
+                style={{ 
+                  backgroundColor: color.hex,
+                  borderColor: selectedColor === color.hex ? theme.border : theme.borderLight,
+                  focusRingColor: theme.border
+                }}
                 title={`Seleccionar color ${color.name}`}
                 aria-label={`Color ${color.name}`}
                 role="radio"
@@ -350,7 +389,7 @@ const HabitForm = ({ onHabitCreated }) => {
             ))}
           </div>
           {selectedColor && (
-            <p className="text-black text-sm mt-2">
+            <p className="text-sm mt-2" style={{ color: theme.text }}>
               Color seleccionado: <span style={{ color: selectedColor }} aria-hidden="true">●</span> {selectedColor}
             </p>
           )}
@@ -358,7 +397,10 @@ const HabitForm = ({ onHabitCreated }) => {
 
         {/* Success Message with Animated Checkmark */}
         {successMessage && (
-          <div className="bg-green-50 text-green-800 px-4 py-3 text-sm flex items-center gap-3">
+          <div 
+            className="px-4 py-3 text-sm flex items-center gap-3 rounded-lg"
+            style={{ backgroundColor: '#d1fae5', color: '#065f46' }}
+          >
             <SuccessCheckmark />
             <span>{successMessage}</span>
           </div>
@@ -366,7 +408,11 @@ const HabitForm = ({ onHabitCreated }) => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 text-red-800 px-4 py-3 text-sm" role="alert">
+          <div 
+            className="px-4 py-3 text-sm rounded-lg" 
+            style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}
+            role="alert"
+          >
             <span aria-hidden="true">❌</span> {error}
           </div>
         )}
@@ -375,8 +421,11 @@ const HabitForm = ({ onHabitCreated }) => {
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
-            className="flex-1 text-white font-semibold py-3 px-4 rounded-lg hover:opacity-80 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            style={{ backgroundColor: '#1C1C1E' }}
+            className="flex-1 font-semibold py-3 px-4 rounded-lg hover:opacity-80 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            style={{ 
+              backgroundColor: theme.accent,
+              color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+            }}
             disabled={isSaving}
             aria-label="Crear nuevo hábito"
           >
@@ -385,15 +434,22 @@ const HabitForm = ({ onHabitCreated }) => {
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 bg-white text-black border font-semibold py-3 rounded-lg hover:text-white hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="px-6 font-semibold py-3 rounded-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             style={{ 
-              borderColor: '#1C1C1E',
-              ['&:hover']: {
-                backgroundColor: '#1C1C1E'
-              }
+              backgroundColor: theme.card,
+              color: theme.text,
+              borderColor: theme.border,
+              borderWidth: '1px',
+              borderStyle: 'solid'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#1C1C1E'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = theme.accent;
+              e.target.style.color = theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = theme.card;
+              e.target.style.color = theme.text;
+            }}
             disabled={isSaving}
             aria-label="Cancelar y limpiar formulario"
           >

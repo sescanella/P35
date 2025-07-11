@@ -10,40 +10,37 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { getLastNDays, createLocalDate, getCurrentLocalDate, addDays } from '../utils/dateUtils.js';
+import { useTheme } from '../contexts/ThemeContext.jsx';
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend);
 
 const HabitChart = ({ habits = [], tracking = [] }) => {
   const [mode, setMode] = useState('daily'); // 'daily' or 'habits'
+  const { theme } = useTheme();
 
-  // Helper function to get last 21 days
+  // Helper function to get last 21 days using timezone-safe utility
   const getLast21Days = () => {
-    const days = [];
-    for (let i = 20; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      days.push(date.toISOString().split('T')[0]);
-    }
-    return days;
+    return getLastNDays(21);
   };
 
   // Helper function to calculate streak for a habit
   const calculateStreak = (habitId) => {
-    const today = new Date().toISOString().split('T')[0];
     let streak = 0;
-    let currentDate = new Date();
+    // Start from yesterday and work backwards to avoid requiring today to be completed
+    let checkDate = addDays(getCurrentLocalDate(), -1);
     
     while (true) {
-      const dateStr = currentDate.toISOString().split('T')[0];
       const completed = tracking.some(t => 
         t.habit_id === habitId && 
-        t.date === dateStr && 
+        t.date === checkDate && 
         t.completed
       );
       
       if (completed) {
         streak++;
-        currentDate.setDate(currentDate.getDate() - 1);
+        // Move to previous day using timezone-safe method
+        checkDate = addDays(checkDate, -1);
       } else {
         break;
       }
@@ -102,7 +99,7 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
   // Chart configuration for daily mode
   const dailyChartData = {
     labels: dailyData.map(d => {
-      const date = new Date(d.date);
+      const date = createLocalDate(d.date);
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }),
     datasets: [
@@ -116,7 +113,7 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
         tension: 0.3,
         pointRadius: 3,
         pointHoverRadius: 5,
-        pointBackgroundColor: '#ffffff',
+        pointBackgroundColor: theme.chartBackground,
         pointBorderColor: '#E22028',
         pointBorderWidth: 2,
       }
@@ -126,21 +123,21 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
   // Chart configuration for habits mode
   const habitsChartData = {
     labels: getLast21Days().map(date => {
-      const d = new Date(date);
+      const d = createLocalDate(date);
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }),
     datasets: habitsData.map((habit, index) => ({
       label: habit.name,
       data: habit.weekData.map(d => d.habit_daily_score),
-      borderColor: habit.color || '#000000',
+      borderColor: habit.color || theme.text,
       backgroundColor: 'transparent',
-      borderWidth: 4,
+      borderWidth: 3,
       fill: false,
       tension: 0.3,
       pointRadius: 3,
       pointHoverRadius: 5,
-      pointBackgroundColor: '#ffffff',
-      pointBorderColor: habit.color || '#000000',
+      pointBackgroundColor: theme.chartBackground,
+      pointBorderColor: habit.color || theme.text,
       pointBorderWidth: 2,
     }))
   };
@@ -157,10 +154,10 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
         display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#000000',
-        bodyColor: '#000000',
-        borderColor: '#000000',
+        backgroundColor: theme.card,
+        titleColor: theme.text,
+        bodyColor: theme.text,
+        borderColor: theme.border,
         borderWidth: 1,
         padding: 12,
         cornerRadius: 8,
@@ -170,7 +167,7 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
         callbacks: {
           title: (items) => {
             const dayIndex = items[0].dataIndex;
-            const date = new Date(getLast21Days()[dayIndex]);
+            const date = createLocalDate(getLast21Days()[dayIndex]);
             return `📅 ${date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}`;
           },
           label: (item) => {
@@ -190,18 +187,18 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
       x: {
         grid: { display: false },
         ticks: {
-          color: '#666666',
+          color: theme.chartText,
           font: { size: 12 }
         }
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: theme.chartGrid,
           lineWidth: 1
         },
         ticks: {
-          color: '#666666',
+          color: theme.chartText,
           font: { size: 12 },
           callback: function(value) {
             return value + ' pts';
@@ -223,26 +220,32 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
     <div className="space-y-6">
       {/* Mode Toggle */}
       <div className="flex justify-center">
-        <div className="bg-white rounded-lg p-1 flex" style={{ borderColor: '#1C1C1E', borderWidth: '1px', borderStyle: 'solid' }}>
+        <div 
+          className="rounded-lg p-1 flex transition-all duration-300" 
+          style={{ 
+            backgroundColor: theme.card, 
+            borderColor: theme.border, 
+            borderWidth: '1px', 
+            borderStyle: 'solid' 
+          }}
+        >
           <button
             onClick={() => setMode('daily')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
-              mode === 'daily'
-                ? 'text-white'
-                : 'text-black hover:bg-gray-100'
-            }`}
-            style={mode === 'daily' ? { backgroundColor: '#1C1C1E' } : {}}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105`}
+            style={{
+              backgroundColor: mode === 'daily' ? theme.accent : 'transparent',
+              color: mode === 'daily' ? (theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF') : theme.text
+            }}
           >
             Daily View
           </button>
           <button
             onClick={() => setMode('habits')}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105 ${
-              mode === 'habits'
-                ? 'text-white'
-                : 'text-black hover:bg-gray-100'
-            }`}
-            style={mode === 'habits' ? { backgroundColor: '#1C1C1E' } : {}}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:scale-105`}
+            style={{
+              backgroundColor: mode === 'habits' ? theme.accent : 'transparent',
+              color: mode === 'habits' ? (theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF') : theme.text
+            }}
           >
             Habits View
           </button>
@@ -252,13 +255,29 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
       {/* Stats Cards */}
       {mode === 'daily' && (
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white border border-black rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-black">{bestDay}</div>
-            <div className="text-sm text-gray-600">Best day</div>
+          <div 
+            className="rounded-lg p-4 text-center transition-all duration-300"
+            style={{ 
+              backgroundColor: theme.card, 
+              borderColor: theme.cardBorder, 
+              borderWidth: '1px', 
+              borderStyle: 'solid' 
+            }}
+          >
+            <div className="text-2xl font-bold" style={{ color: theme.text }}>{bestDay}</div>
+            <div className="text-sm" style={{ color: theme.textSecondary }}>Best day</div>
           </div>
-          <div className="bg-white border border-black rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-black">{averageDailyScore}</div>
-            <div className="text-sm text-gray-600">Average daily score</div>
+          <div 
+            className="rounded-lg p-4 text-center transition-all duration-300"
+            style={{ 
+              backgroundColor: theme.card, 
+              borderColor: theme.cardBorder, 
+              borderWidth: '1px', 
+              borderStyle: 'solid' 
+            }}
+          >
+            <div className="text-2xl font-bold" style={{ color: theme.text }}>{averageDailyScore}</div>
+            <div className="text-sm" style={{ color: theme.textSecondary }}>Average daily score</div>
           </div>
         </div>
       )}
@@ -269,16 +288,33 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
           {habitsData.map(habit => (
             <div
               key={habit.id}
-              className="bg-gray-50 border border-black rounded-lg p-3 text-center shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col items-center"
+              className="rounded-lg p-3 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center"
+              style={{ 
+                backgroundColor: theme.secondary, 
+                borderColor: theme.cardBorder, 
+                borderWidth: '1px', 
+                borderStyle: 'solid' 
+              }}
             >
-              <div className="font-bold text-xs text-black mb-1 tracking-wide uppercase truncate w-full">
+              <div 
+                className="font-bold text-xs mb-1 tracking-wide uppercase truncate w-full"
+                style={{ color: theme.text }}
+              >
                 {habit.name}
               </div>
               <div className="flex flex-col items-center justify-center flex-1">
-                <span className="text-2xl font-extrabold text-black leading-tight mb-0.5">
+                <span 
+                  className="text-2xl font-extrabold leading-tight mb-0.5"
+                  style={{ color: theme.text }}
+                >
                   {habit.streak}
                 </span>
-                <span className="text-xs font-semibold text-gray-700 tracking-wider uppercase">days</span>
+                <span 
+                  className="text-xs font-semibold tracking-wider uppercase"
+                  style={{ color: theme.textSecondary }}
+                >
+                  days
+                </span>
               </div>
             </div>
           ))}
@@ -286,8 +322,19 @@ const HabitChart = ({ habits = [], tracking = [] }) => {
       )}
 
       {/* Chart */}
-      <div className="bg-white border border-black rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-black mb-4 text-center">
+      <div 
+        className="rounded-lg p-6 transition-all duration-300"
+        style={{ 
+          backgroundColor: theme.chartBackground, 
+          borderColor: theme.cardBorder, 
+          borderWidth: '1px', 
+          borderStyle: 'solid' 
+        }}
+      >
+        <h3 
+          className="text-lg font-semibold mb-4 text-center"
+          style={{ color: theme.text }}
+        >
           {mode === 'daily' ? 'Daily Completion Rate' : '📈 Individual Habit Progress'}
         </h3>
         <div style={{ height: mode === 'habits' ? 300 : 250 }}>

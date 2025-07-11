@@ -4,10 +4,17 @@ import HabitList from '../components/HabitList.jsx'
 import HabitChart from '../components/HabitChart.jsx'
 import DailyTracker from '../components/DailyTracker.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
+import TimezoneSettings from '../components/TimezoneSettings.jsx'
+import DarkModeToggle from '../components/DarkModeToggle.jsx'
 import { createHabit, getHabits, updateHabit, deactivateHabit, getHabitTrackingByDate } from '../models/habitModel.js'
 import { supabase } from '../services/supabase.js'
+import { getLastNDays } from '../utils/dateUtils.js'
+import { useTheme } from '../contexts/ThemeContext.jsx'
 
 function Dashboard() {
+  // Get theme context
+  const { theme } = useTheme();
+  
   // Estado de hábitos y formulario
   const [habits, setHabits] = useState([])
   const [tracking, setTracking] = useState([])
@@ -56,12 +63,10 @@ function Dashboard() {
     try {
       const trackingData = []
       
-      // Obtener los últimos 21 días
-      for (let i = 20; i >= 0; i--) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        const dateStr = date.toISOString().split('T')[0]
-        
+      // Obtener los últimos 21 días usando utilidad timezone-safe
+      const last21Days = getLastNDays(21)
+      
+      for (const dateStr of last21Days) {
         // Obtener tracking para cada fecha
         const { data, error } = await supabase
           .from('p35_habit_tracking')
@@ -183,12 +188,16 @@ function Dashboard() {
   const handleDelete = (id) => setHabits(habits.filter(h => h.id !== id))
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto transition-colors duration-300" style={{ backgroundColor: theme.primary }}>
       {/* Show LoadingScreen while loading */}
       <LoadingScreen isVisible={isLoading} />
       
       {error && (
-        <div className="mb-4 p-4 bg-white border border-black text-black">
+        <div className="mb-4 p-4 rounded-lg border" style={{ 
+          backgroundColor: theme.card, 
+          borderColor: theme.border,
+          color: theme.text 
+        }}>
           {error}
         </div>
       )}
@@ -197,28 +206,28 @@ function Dashboard() {
         <>
           {/* Hero Section */}
           <div className="text-center mb-6">
-            <h1 className="text-5xl font-extrabold text-black mb-1 animate-scale-in">
-              HABITOS SEBA
-            </h1>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-4">
+                <DarkModeToggle />
+              </div>
+              <h1 className="text-5xl font-extrabold mb-1 animate-scale-in" style={{ color: theme.text }}>
+                HABITOS SEBA
+              </h1>
+              <TimezoneSettings 
+                onTimezoneChange={(timezone) => {
+                  console.log('Timezone changed to:', timezone);
+                  // Reload tracking data when timezone changes
+                  loadTrackingData();
+                }}
+              />
+            </div>
           </div>
 
           {/* Main Content Grid - 40%/60% split */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
-            {/* Left Column: Metrics + HabitForm + HabitList (40% width) */}
+            {/* Left Column: HabitForm + HabitList (40% width) */}
             <div className="lg:col-span-2 space-y-4">
               
-              {/* Metrics Block */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="text-center bg-white border border-black rounded-2xl p-4">
-                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Total de hábitos</span>
-                  <div className="text-2xl font-bold text-black mt-1">{habits.length}</div>
-                </div>
-                <div className="text-center bg-white border border-black rounded-2xl p-4">
-                  <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Completados hoy</span>
-                  <div className="text-2xl font-bold text-black mt-1">{habits.filter(h => h.done).length}</div>
-                </div>
-              </div>
-
               {/* HabitForm - Collapsible */}
               <CollapsibleHabitForm 
                 habit={editingHabit} 
