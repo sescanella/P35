@@ -6,6 +6,7 @@ import DailyTracker from '../components/DailyTracker.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import TimezoneSettings from '../components/TimezoneSettings.jsx'
 import DarkModeToggle from '../components/DarkModeToggle.jsx'
+import AITextInput from '../components/AITextInput.jsx';
 import { createHabit, getHabits, updateHabit, deactivateHabit, getHabitTrackingByDate } from '../models/habitModel.js'
 import { supabase } from '../services/supabase.js'
 import { getLastNDays } from '../utils/dateUtils.js'
@@ -225,8 +226,11 @@ function Dashboard() {
 
           {/* Main Content Grid - 40%/60% split */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
-            {/* Left Column: HabitForm + HabitList (40% width) */}
+            {/* Left Column: AITextInput + HabitForm + HabitList (40% width) */}
             <div className="lg:col-span-2 space-y-4">
+              
+              {/* PiPa AI Chat - Collapsible */}
+              <AITextInput />
               
               {/* HabitForm - Collapsible */}
               <CollapsibleHabitForm 
