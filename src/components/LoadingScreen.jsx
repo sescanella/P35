@@ -106,30 +106,4 @@ const LoadingScreen = ({
   );
 };
 
-// Componente más simple solo con dots (para uso en otros lugares)
-export const LoadingDots = ({ size = 'md', className = "" }) => {
-  const { theme } = useTheme();
-  
-  const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4'
-  };
-
-  return (
-    <div className={`flex space-x-2 ${className}`}>
-      {[0, 1, 2].map((index) => (
-        <div
-          key={index}
-          className={`${sizeClasses[size]} rounded-full shadow-sm animate-bounce-wave`}
-          style={{
-            background: `linear-gradient(135deg, ${theme.accent}, ${theme.text})`,
-            animationDelay: `${index * 0.2}s`
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 export default LoadingScreen;

@@ -254,12 +254,31 @@ function Dashboard() {
           </div>
 
           {/* Row 3: Chart - Full Width */}
-          <div className="bg-white border border-black rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div 
+            className="border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+            style={{ 
+              backgroundColor: theme.card, 
+              borderColor: theme.border 
+            }}
+          >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-lg text-white">📊</span>
+              <div 
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: theme.accent }}
+              >
+                <span 
+                  className="text-lg"
+                  style={{ color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF' }}
+                >
+                  📊
+                </span>
               </div>
-              <h2 className="text-xl font-bold text-black">Progreso Diario</h2>
+              <h2 
+                className="text-xl font-bold transition-colors duration-300"
+                style={{ color: theme.text }}
+              >
+                Progreso Diario
+              </h2>
             </div>
             <HabitChart habits={habits} tracking={tracking} />
           </div>
@@ -271,25 +290,55 @@ function Dashboard() {
 
 // Componente HabitForm Colapsable
 function CollapsibleHabitForm({ habit, onSave, onHabitCreated, showEditOptions, onDeactivate, onCancel }) {
+  const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="bg-white border border-black rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div 
+      className="border rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+      style={{ 
+        backgroundColor: theme.card, 
+        borderColor: theme.border 
+      }}
+    >
       {/* Header clickeable */}
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+        className="flex items-center justify-between p-4 cursor-pointer hover:opacity-80 transition-all duration-200"
         onClick={() => setIsExpanded(!isExpanded)}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = theme.secondary;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = theme.card;
+        }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-            <span className="text-sm text-white">✨</span>
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: theme.accent }}
+          >
+            <span 
+              className="text-sm"
+              style={{ color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF' }}
+            >
+              ✨
+            </span>
           </div>
-          <h3 className="text-lg font-bold text-black">
+          <h3 
+            className="text-lg font-bold transition-colors duration-300"
+            style={{ color: theme.text }}
+          >
             {habit ? 'Editar Hábito' : 'Crear Nuevo Hábito'}
           </h3>
         </div>
         <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>
-          <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg 
+            className="w-4 h-4 transition-colors duration-300" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{ color: theme.text }}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>
@@ -299,7 +348,14 @@ function CollapsibleHabitForm({ habit, onSave, onHabitCreated, showEditOptions, 
       <div className={`transition-all duration-300 ease-in-out ${
         isExpanded ? 'max-h-fit opacity-100' : 'max-h-0 opacity-0'
       } overflow-hidden`}>
-        <div className="p-4 border-t border-gray-100">
+        <div 
+          className="p-4 transition-colors duration-300"
+          style={{ 
+            borderTopColor: theme.borderLight,
+            borderTopWidth: '1px',
+            borderTopStyle: 'solid'
+          }}
+        >
           <div className="pt-0">
             {/* Use new HabitForm for creating new habits */}
             {!habit && (
@@ -308,31 +364,45 @@ function CollapsibleHabitForm({ habit, onSave, onHabitCreated, showEditOptions, 
             
             {/* For editing existing habits, we'd need an EditHabitForm component */}
             {habit && (
-              <div className="text-center py-8 text-gray-500">
-                <p>La edición de hábitos aún no está implementada.</p>
-                <p className="text-sm mt-2">Por ahora, puedes crear un nuevo hábito.</p>
+              <div className="text-center py-8">
+                <p style={{ color: theme.textSecondary }}>La edición de hábitos aún no está implementada.</p>
+                <p 
+                  className="text-sm mt-2"
+                  style={{ color: theme.textTertiary }}
+                >
+                  Por ahora, puedes crear un nuevo hábito.
+                </p>
               </div>
             )}
             
             {showEditOptions && (
               <div className="flex gap-2 mt-4">
                 <button
-                  className="flex-1 text-white py-2 px-4 rounded-lg hover:opacity-80 hover:scale-105 transition-all duration-200 font-medium"
-                  style={{ backgroundColor: '#1C1C1E' }}
+                  className="flex-1 py-2 px-4 rounded-lg hover:opacity-80 hover:scale-105 transition-all duration-200 font-medium"
+                  style={{ 
+                    backgroundColor: theme.accent,
+                    color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF'
+                  }}
                   onClick={onDeactivate}
                 >
                   Eliminar
                 </button>
                 <button
-                  className="flex-1 bg-white text-black border py-2 px-4 rounded-lg hover:text-white hover:scale-105 transition-all duration-200 font-medium"
-                  style={{ borderColor: '#1C1C1E' }}
+                  className="flex-1 py-2 px-4 rounded-lg hover:scale-105 transition-all duration-200 font-medium"
+                  style={{ 
+                    backgroundColor: theme.card,
+                    color: theme.text,
+                    borderColor: theme.border,
+                    borderWidth: '1px',
+                    borderStyle: 'solid'
+                  }}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = '#1C1C1E';
-                    e.target.style.color = 'white';
+                    e.target.style.backgroundColor = theme.accent;
+                    e.target.style.color = theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'white';
-                    e.target.style.color = 'black';
+                    e.target.style.backgroundColor = theme.card;
+                    e.target.style.color = theme.text;
                   }}
                   onClick={onCancel}
                 >
@@ -349,26 +419,66 @@ function CollapsibleHabitForm({ habit, onSave, onHabitCreated, showEditOptions, 
 
 // Componente HabitList Colapsable
 function CollapsibleHabitList({ habits, onToggleDone, onEdit, onDelete }) {
+  const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false) // Comprimido por defecto
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden" style={{ borderColor: '#1C1C1E', borderWidth: '1px', borderStyle: 'solid' }}>
+    <div 
+      className="rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden" 
+      style={{ 
+        backgroundColor: theme.card,
+        borderColor: theme.border, 
+        borderWidth: '1px', 
+        borderStyle: 'solid' 
+      }}
+    >
       {/* Header clickeable */}
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+        className="flex items-center justify-between p-4 cursor-pointer hover:opacity-80 transition-all duration-200"
         onClick={() => setIsExpanded(!isExpanded)}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = theme.secondary;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = theme.card;
+        }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1C1C1E' }}>
-            <span className="text-sm text-white">📝</span>
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center" 
+            style={{ backgroundColor: theme.accent }}
+          >
+            <span 
+              className="text-sm"
+              style={{ color: theme.accent === '#FFFFFF' ? '#000000' : '#FFFFFF' }}
+            >
+              📝
+            </span>
           </div>
-          <h3 className="text-lg font-bold text-black">Mis Hábitos</h3>
-          <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+          <h3 
+            className="text-lg font-bold transition-colors duration-300"
+            style={{ color: theme.text }}
+          >
+            Mis Hábitos
+          </h3>
+          <span 
+            className="text-xs font-medium px-2 py-1 rounded-full transition-colors duration-300"
+            style={{ 
+              color: theme.textSecondary, 
+              backgroundColor: theme.secondary 
+            }}
+          >
             {habits.length}
           </span>
         </div>
         <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>
-          <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg 
+            className="w-4 h-4 transition-colors duration-300" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{ color: theme.text }}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </div>
@@ -378,7 +488,14 @@ function CollapsibleHabitList({ habits, onToggleDone, onEdit, onDelete }) {
       <div className={`transition-all duration-300 ease-in-out ${
         isExpanded ? 'max-h-fit opacity-100' : 'max-h-0 opacity-0'
       } overflow-hidden`}>
-        <div className="p-4 border-t border-gray-100">
+        <div 
+          className="p-4 transition-colors duration-300"
+          style={{ 
+            borderTopColor: theme.borderLight,
+            borderTopWidth: '1px',
+            borderTopStyle: 'solid'
+          }}
+        >
           <div className="pt-0">
             <HabitList
               habits={habits}

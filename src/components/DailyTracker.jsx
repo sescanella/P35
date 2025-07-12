@@ -10,7 +10,7 @@ import {
   calculateNotePoints
 } from '../models/habitModel.js'
 import { supabase } from '../services/supabase.js'
-import { getCurrentLocalDate, formatLocalDate, isToday } from '../utils/dateUtils.js'
+import { getCurrentLocalDate, isToday } from '../utils/dateUtils.js'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
 const MAX_INSTANCES = 7; // or whatever value you need
@@ -177,7 +177,7 @@ const DailyTracker = () => {
 
   const finalizeDay = async () => {
     if (totalScore === 0) {
-      setMessage('⚠️ No hay hábitos registrados para finalizar el día')
+      setMessage('⚠️ No hay puntos para finalizar el día')
       return
     }
 
@@ -190,9 +190,8 @@ const DailyTracker = () => {
       
       // Calcular puntaje diario (incluye hábitos + notas)
       const result = await calculateDailyScore(selectedDate)
-      const finalTotal = result.totalScore
       
-      setMessage(`🎉 Día finalizado! Puntaje total: ${finalTotal} puntos`)
+      setMessage(`🎉 Día finalizado! Puntaje total: ${result.totalScore} puntos`)
       setTimeout(() => setMessage(''), 4000)
     } catch (error) {
       console.error('Error finalizing day:', error)
@@ -227,15 +226,6 @@ const DailyTracker = () => {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const formatDate = (dateString) => {
-    return formatLocalDate(dateString, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long', 
-      day: 'numeric' 
-    })
   }
 
   const isTodaySelected = isToday(selectedDate)
@@ -395,25 +385,6 @@ const DailyTracker = () => {
         )}
       </div>
 
-      {/* Total score */}
-      <div 
-        className="border rounded-lg p-6 mb-6 transition-all duration-300"
-        style={{ 
-          backgroundColor: theme.secondary, 
-          borderColor: theme.borderLight 
-        }}
-      >
-        <div className="text-center">
-          <p className="text-lg mb-2 font-medium" style={{ color: theme.text }}>Puntaje total del día</p>
-          <p className="text-4xl font-bold" style={{ color: theme.text }}>{totalScore} puntos</p>
-          {notePoints > 0 && (
-            <p className="text-sm mt-1" style={{ color: theme.textSecondary }}>
-              (incluye {notePoints} pts de notas)
-            </p>
-          )}
-        </div>
-      </div>
-
       {/* Daily Notes Section */}
       <div 
         className="border rounded-lg p-6 mb-6 transition-all duration-300"
@@ -443,7 +414,7 @@ const DailyTracker = () => {
             value={dailyNote}
             onChange={handleNoteChange}
             placeholder={`¿Cómo estuvo tu día? Comparte tus reflexiones...${'\n'}(1 punto por cada 20 caracteres)`}
-            className="w-full h-32 p-4 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
+            className="w-full h-20 p-3 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
             style={{
               backgroundColor: theme.card,
               color: theme.text,
@@ -460,6 +431,25 @@ const DailyTracker = () => {
               Puntos calculados: {notePoints}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Total score */}
+      <div 
+        className="border rounded-lg p-6 mb-6 transition-all duration-300"
+        style={{ 
+          backgroundColor: theme.secondary, 
+          borderColor: theme.borderLight 
+        }}
+      >
+        <div className="text-center">
+          <p className="text-lg mb-2 font-medium" style={{ color: theme.text }}>Puntaje total del día</p>
+          <p className="text-4xl font-bold" style={{ color: theme.text }}>{totalScore} puntos</p>
+          {notePoints > 0 && (
+            <p className="text-sm mt-1" style={{ color: theme.textSecondary }}>
+              (incluye {notePoints} pts de notas)
+            </p>
+          )}
         </div>
       </div>
 
