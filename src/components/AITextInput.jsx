@@ -18,7 +18,7 @@ const AITextInput = () => {
     setPipaResponse('');
     
     try {
-      const response = await fetch('http://localhost:3001/api/chat', {
+      const response = await fetch('/api/pipa', {  // Sin localhost
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
