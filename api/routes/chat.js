@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
-// POST /api/chat - Endpoint para conversar con PiPa
-router.post('/chat', async (req, res) => {
+// POST /api/pipa - Endpoint para conversar con PiPa
+router.post('/pipa', async (req, res) => {
   try {
     // Extraer el texto del body de la petición
     const { text, sessionId, userId } = req.body;
@@ -51,7 +51,7 @@ router.post('/chat', async (req, res) => {
 
   } catch (error) {
     // Manejo de errores
-    console.error('❌ Error en /api/chat:', error);
+    console.error('❌ Error en /api/pipa:', error);
     res.status(500).json({
       success: false,
       error: 'PiPa tuvo un problema interno 😿',
@@ -60,8 +60,8 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// GET /api/chat/history - Obtener historial de conversaciones
-router.get('/chat/history/:sessionId?', async (req, res) => {
+// GET /api/pipa/history - Obtener historial de conversaciones
+router.get('/pipa/history/:sessionId?', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { userId = 'anonymous', limit = 20 } = req.query;
@@ -88,8 +88,8 @@ router.get('/chat/history/:sessionId?', async (req, res) => {
   }
 });
 
-// GET /api/chat/info - Información del sistema
-router.get('/chat/info', async (req, res) => {
+// GET /api/pipa/info - Información del sistema
+router.get('/pipa/info', async (req, res) => {
   try {
     const openaiStatus = await testOpenAIConnection();
     const supabaseStatus = await testSupabaseConnection();
