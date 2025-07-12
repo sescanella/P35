@@ -35,17 +35,19 @@ app.use((req, res, next) => {
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Rutas de la API
-app.use('/api', chatRoutes);
-
-// Ruta de prueba - solo para verificar que funciona
+// Ruta de prueba - DEBE IR ANTES de las rutas de la API
 app.get('/api/test', (req, res) => {
+  console.log('📞 Ruta /api/test llamada');
   res.json({ 
     message: '¡Hola! Soy el servidor de PiPa 🐱', 
     status: 'funcionando',
     timestamp: new Date().toISOString()
   });
 });
+
+// Rutas de la API
+console.log('🔧 Montando rutas en /api...');
+app.use('/api', chatRoutes);
 
 // Servir React app para todas las demás rutas
 app.get('*', (req, res) => {
