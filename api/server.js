@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import chatRoutes from './routes/chat.js';
+import chatRoutes from './routes/chat.js'; // ← Cambiar aquí: quitar el ./api/
 import { OpenAI } from 'openai';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -25,6 +25,12 @@ const PORT = process.env.PORT || 3001;
 // Middlewares (software que se ejecuta entre petición y respuesta)
 app.use(cors()); // Permite que el frontend (puerto 3000) hable con el backend (puerto 3001)
 app.use(express.json()); // Permite recibir JSON en las peticiones
+
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.url}`);
+  next();
+});
 
 // Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, '../dist')));
