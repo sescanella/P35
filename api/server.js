@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import chatRoutes from './routes/chat.js'; // ← Cambiar aquí: quitar el ./api/
+import chatRoutes from './routes/chat.js'; // ← Debe ser así, no ./api/routes/chat.js
 import { OpenAI } from 'openai';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -55,7 +55,7 @@ app.get('*', (req, res) => {
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor PiPa ejecutándose en puerto ${PORT}`);
-  console.log(`🐱 Frontend + Backend listos`);
+  console.log(`🐱 Frontend + Backend listos - v2`); // ← Cambio menor para forzar deploy
 });
 
 // Manejo de errores
